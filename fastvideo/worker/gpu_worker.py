@@ -30,7 +30,7 @@ CYAN = '\033[1;36m'
 RESET = '\033[0;0m'
 
 
-class Worker:
+class GpuWorker:
 
     def __init__(self, fastvideo_args: FastVideoArgs, local_rank: int,
                  rank: int, pipe: Connection, master_port: int):
@@ -195,6 +195,180 @@ class Worker:
                                  self.rank, str(e))
                 continue
 
+class WorkerBase:
+    """Worker interface that allows FastVideo to cleanly separate implementations for
+    different hardware. Also abstracts control plane communication, e.g., to
+    communicate request metadata to other workers.
+    """
+
+    def __init__(
+        self,
+        fastvideo_args: FastVideoArgs,
+    ) -> None:
+        self.fastvideo_args = fastvideo_args
+
+    def init_device(self) -> None:
+        """Initialize device state, such as loading the model or other on-device
+        memory allocations.
+        """
+        raise NotImplementedError
+
+    def initialize_cache(self, num_gpu_blocks: int,
+                         num_cpu_blocks: int) -> None:
+        """Initialize the KV cache with the given size in blocks.
+        """
+        raise NotImplementedError
+
+    def get_model(self) -> nn.Module:
+        raise NotImplementedError
+
+    def load_model(self) -> None:
+        """Load model onto target device."""
+        raise NotImplementedError
+
+    def execute_forward(self, forward_batch: ForwardBatch,
+                        fastvideo_args: FastVideoArgs) -> ForwardBatch:
+        raise NotImplementedError
+
+    def start_worker_execution_loop(self) -> None:
+        """Execute model loop in parallel worker.
+
+        You can stop the loop by executing a driver worker with an empty output.
+        See `stop_remote_worker_execution_loop` for more details.
+        """
+        with self.current_platform.inference_mode():
+            while True:
+                output = self.execute_model(execute_model_req=None)
+                if output is None:
+                    return None
+
+    def determine_num_available_blocks(self) -> Tuple[int, int]:
+        """Determine the number of available blocks for the GPU KV cache and
+        swappable CPU KV cache.
+
+        The implementation may run profiling or other heuristics to determine
+        the size of caches.
+
+        Returns a Tuple[num_gpu_blocks, num_cpu_blocks], where num_gpu_blocks
+        are blocks that are "active" on the device and can be appended to.
+        num_cpu_blocks refers to "swapped" blocks in CPU memory and cannot be
+        appended to.
+        """
+        raise NotImplementedError
+
+    def get_cache_block_size_bytes(self) -> int:
+        """Return the size of a single cache block, in bytes. Used in
+        speculative decoding.
+        """
+        raise NotImplementedError
+
+
+class WorkerWrapperBase:
+    """
+    This class represents one process in an executor/engine. It is responsible
+    for lazily initializing the worker and handling the worker's lifecycle.
+    We first instantiate the WorkerWrapper, which remembers the worker module
+    and class name. Then, when we call `update_environment_variables`, and the
+    real initialization happens in `init_worker`.
+    """
+
+    def __init__(
+        self,
+        fastvideo_args: FastVideoArgs,
+        rpc_rank: int = 0,
+    ) -> None:
+        """
+        Initialize the worker wrapper with the given fastvideo_args and rpc_rank.
+        Note: rpc_rank is the rank of the worker in the executor. In most cases,
+        it is also the rank of the worker in the distributed group. However,
+        when multiple executors work together, they can be different.
+        e.g. in the case of SPMD-style offline inference with TP=2,
+        users can launch 2 engines/executors, each with only 1 worker.
+        All workers have rpc_rank=0, but they have different ranks in the TP
+        group.
+        """
+        self.rpc_rank = rpc_rank
+        self.worker: WorkerBase | None = None
+        self.fastvideo_args: FastVideoArgs | None = None
+        # do not store this `fastvideo_args`, `init_worker` will set the final
+        # one.
+
+    def adjust_rank(self, rank_mapping: dict[int, int]) -> None:
+        """
+        Adjust the rpc_rank based on the given mapping.
+        It is only used during the initialization of the executor,
+        to adjust the rpc_rank of workers after we create all workers.
+        """
+        if self.rpc_rank in rank_mapping:
+            self.rpc_rank = rank_mapping[self.rpc_rank]
+
+    def update_environment_variables(self, envs_list: list[dict[str,
+                                                                str]]) -> None:
+        envs = envs_list[self.rpc_rank]
+        key = 'CUDA_VISIBLE_DEVICES'
+        if key in envs and key in os.environ:
+            # overwriting CUDA_VISIBLE_DEVICES is desired behavior
+            # suppress the warning in `update_environment_variables`
+            del os.environ[key]
+        # update_environment_variables(envs)
+        for k, v in envs.items():
+            if k not in os.environ and os.environ[k] != v:
+                logger.warning(
+                    "Overwriting environment variable %s "
+                    "from '%s' to '%s'", k, os.environ[k], v)
+            os.environ[k] = v
+
+    def init_worker(self, all_kwargs: list[dict[str, Any]]) -> None:
+        # TODO(xingyu): move this to RayWorkerWrapper
+        """
+        Here we inject some common logic before initializing the worker.
+        Arguments are passed to the worker class constructor.
+        """
+        kwargs = all_kwargs[self.rpc_rank]
+        self.fastvideo_args = kwargs.get("fastvideo_args")
+        assert self.fastvideo_args is not None, (
+            "fastvideo_args is required to initialize the worker")
+        # enable_trace_function_call_for_thread(self.vllm_config)
+
+        # from vllm.plugins import load_general_plugins
+        # load_general_plugins()
+
+        # TODO(xingyu): we only support ray at WorkerWrapperBase
+        # if self.fastvideo_args.distributed_executor_backend == "ray":
+        #     worker_class = None
+        #
+        # # To make FastVideo args available during worker initialization
+        # self.worker = worker_class(**kwargs)
+        # assert self.worker is not None
+
+    def initialize_from_config(self, kv_cache_configs: list[Any]) -> None:
+        kv_cache_config = kv_cache_configs[self.rpc_rank]
+        self.worker.initialize_from_config(kv_cache_config)  # type: ignore
+
+    def init_device(self):
+        # To make FastVideo args available during device initialization
+        self.worker.init_device()  # type: ignore
+
+    def execute_method(self, method: Union[str, bytes], *args, **kwargs):
+        try:
+            # method resolution order:
+            # if a method is defined in this class, it will be called directly.
+            # otherwise, since we define `__getattr__` and redirect attribute
+            # query to `self.worker`, the method will be called on the worker.
+            return run_method(self, method, args, kwargs)
+        except Exception as e:
+            # if the driver worker also execute methods,
+            # exceptions in the rest worker may cause deadlock in rpc like ray
+            # see https://github.com/vllm-project/vllm/issues/3455
+            # print the error and inform the user to solve the error
+            msg = (f"Error executing method {method!r}. "
+                   "This might cause deadlock in distributed execution.")
+            logger.exception(msg)
+            raise e
+
+    def __getattr__(self, attr):
+        return getattr(self.worker, attr)
+
 
 def run_worker_process(fastvideo_args: FastVideoArgs, local_rank: int,
                        rank: int, pipe: Connection, master_port: int):
@@ -214,7 +388,7 @@ def run_worker_process(fastvideo_args: FastVideoArgs, local_rank: int,
                 local_main_process_only=False)
 
     try:
-        worker = Worker(fastvideo_args, local_rank, rank, pipe, master_port)
+        worker = GpuWorker(fastvideo_args, local_rank, rank, pipe, master_port)
         logger.info("Worker %d sending ready", rank)
         pipe.send({
             "status": "ready",
