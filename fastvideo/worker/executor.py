@@ -142,7 +142,7 @@ class DistributedExecutorBase(Executor):
 
     def collective_rpc(self,
                        method: str | Callable,
-                       timeout: float | None,
+                       timeout: float | None = None,
                        args: tuple = (),
                        kwargs: dict | None = None) -> list[Any]:
         return self._run_workers(method, *args, **(kwargs or {}))
