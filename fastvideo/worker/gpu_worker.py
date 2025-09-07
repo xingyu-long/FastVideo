@@ -578,7 +578,7 @@ class Worker(LocalOrDistributedWorkerBase):
 
         # Initialize the distributed environment.
         maybe_init_distributed_environment_and_model_parallel(
-            self.fastvideo_args.tp_size, self.fastvideo_args.sp_size)
+            self.fastvideo_args.tp_size, self.fastvideo_args.sp_size, self.distributed_init_method)
 
         self.pipeline = build_pipeline(self.fastvideo_args)
 

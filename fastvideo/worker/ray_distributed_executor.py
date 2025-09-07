@@ -66,6 +66,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
     def _init_executor(self) -> None:
         initialize_ray_cluster(self.fastvideo_args, self.parallel_config)
         placement_group = self.parallel_config.placement_group
+        self.parallel_config.world_size = self.fastvideo_args.num_gpus
 
         # Disable Ray usage stats collection.
         ray_usage = os.environ.get("RAY_USAGE_STATS_ENABLED", "0")
