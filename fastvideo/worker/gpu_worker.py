@@ -221,8 +221,8 @@ class WorkerBase:
         """
         raise NotImplementedError
 
-    def get_model(self) -> nn.Module:
-        raise NotImplementedError
+    # def get_model(self) -> nn.Module:
+        # raise NotImplementedError
 
     def load_model(self) -> None:
         """Load model onto target device."""
