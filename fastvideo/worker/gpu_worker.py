@@ -22,7 +22,9 @@ from fastvideo.logger import init_logger
 from fastvideo.pipelines import ForwardBatch, LoRAPipeline, build_pipeline
 from fastvideo.platforms import current_platform
 from fastvideo.utils import (get_exception_traceback,
-                             kill_itself_when_parent_died, run_method)
+                             kill_itself_when_parent_died,
+                             run_method,
+                             update_environment_variables)
 
 logger = init_logger(__name__)
 
@@ -947,13 +949,7 @@ class WorkerWrapperBase:
             # overwriting CUDA_VISIBLE_DEVICES is desired behavior
             # suppress the warning in `update_environment_variables`
             del os.environ[key]
-        # update_environment_variables(envs)
-        for k, v in envs.items():
-            if k not in os.environ and os.environ[k] != v:
-                logger.warning(
-                    "Overwriting environment variable %s "
-                    "from '%s' to '%s'", k, os.environ[k], v)
-            os.environ[k] = v
+        update_environment_variables(envs)
 
     def init_worker(self, all_kwargs: list[dict[str, Any]]) -> None:
         # TODO(xingyu): move this to RayWorkerWrapper
