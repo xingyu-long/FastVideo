@@ -348,11 +348,12 @@ class RayDistributedExecutor(DistributedExecutorBase):
                 "fastvideo_args": fastvideo_args,
             },
         )
-        output = responses[0]["output_batch"]
+        # TODO(xingyu): need to figure out how to pass return parameters
+        output = responses[0].output
 
         logging_info = None
         if envs.FASTVIDEO_STAGE_LOGGING:
-            logging_info = responses[0]["logging_info"]
+            logging_info = responses[0].logging_info
 
         result_batch = ForwardBatch(
             data_type=forward_batch.data_type,
