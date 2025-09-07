@@ -64,8 +64,8 @@ class RayDistributedExecutor(DistributedExecutorBase):
     ADDITIONAL_ENV_VARS = {"HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"}
 
     def _init_executor(self) -> None:
-        initialize_ray_cluster(self.fastvideo_args)
-        placement_group = self.fastvideo_args.ray_placement_group
+        initialize_ray_cluster(self.fastvideo_args, self.parallel_config)
+        placement_group = self.parallel_config.placement_group
 
         # Disable Ray usage stats collection.
         ray_usage = os.environ.get("RAY_USAGE_STATS_ENABLED", "0")

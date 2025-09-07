@@ -10,6 +10,7 @@ from enum import Enum
 from typing import Any, TYPE_CHECKING
 
 from fastvideo.configs.configs import PreprocessConfig
+from fastvideo.configs.parallel import ParallelConfig
 from fastvideo.configs.pipelines.base import PipelineConfig, STA_Mode
 from fastvideo.configs.utils import clean_cli_args
 from fastvideo.logger import init_logger
@@ -95,6 +96,7 @@ class FastVideoArgs:
     # Cache strategy
     cache_strategy: str = "none"
 
+    parallel_config: ParallelConfig = field(default_factory=ParallelConfig)
     # Distributed executor backend
     distributed_executor_backend: str = "mp"
 

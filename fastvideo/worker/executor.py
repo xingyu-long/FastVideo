@@ -16,6 +16,7 @@ class Executor(ABC):
 
     def __init__(self, fastvideo_args: FastVideoArgs):
         self.fastvideo_args = fastvideo_args
+        self.parallel_config = self.fastvideo_args.parallel_config
 
         self._init_executor()
 

@@ -2,6 +2,7 @@ from collections import defaultdict
 import os
 import time
 
+from fastvideo.configs.parallel import ParallelConfig
 from fastvideo.utils import get_ip
 from fastvideo.fastvideo_args import FastVideoArgs
 from fastvideo.worker.gpu_worker import WorkerWrapperBase
@@ -149,6 +150,7 @@ def _wait_until_pg_ready(current_placement_group: "PlacementGroup"):
 
 def initialize_ray_cluster(
     fastvideo_args: FastVideoArgs,
+    parallel_config: ParallelConfig,
     ray_address: str | None = None,
 ):
     """Initialize the distributed cluster with Ray.
@@ -190,8 +192,8 @@ def initialize_ray_cluster(
 
     # Create or get the placement group for worker processes
     # TODO(xingyu): do we need the parallel_config?
-    if fastvideo_args.ray_placement_group:
-        current_placement_group = fastvideo_args.ray_placement_group
+    if parallel_config.placement_group:
+        current_placement_group = parallel_config.placement_group 
     else:
         current_placement_group = ray.util.get_current_placement_group()
 
@@ -258,4 +260,4 @@ def initialize_ray_cluster(
     _verify_bundles(current_placement_group, fastvideo_args, device_str)
     # Set the placement group in the parallel config
     # TODO(xingyu): figure this out later
-    fastvideo_args.placement_group = current_placement_group
+    parallel_config.placement_group = current_placement_group
