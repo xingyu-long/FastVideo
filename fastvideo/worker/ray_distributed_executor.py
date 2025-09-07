@@ -74,6 +74,20 @@ class RayDistributedExecutor(DistributedExecutorBase):
 
         self._init_workers_ray(placement_group)
 
+    def shutdown(self) -> None:
+        logger.info(
+            "Shutting down Ray distributed executor. If you see error log "
+            "from logging.cc regarding SIGTERM received, please ignore because "
+            "this is the expected termination process in Ray.")
+        import ray
+        for worker in self.workers:
+            ray.kill(worker)
+
+        self.workers = []
+
+    def __del__(self):
+        self.shutdown()
+
     # child class could overwrite this to return actual env vars.
     def _get_env_vars_to_be_updated(self):
         return self._env_vars_for_all_workers
@@ -345,6 +359,31 @@ class RayDistributedExecutor(DistributedExecutorBase):
             logging_info=logging_info,
         )
         return result_batch
+
+    def set_lora_adapter(self,
+                         lora_nickname: str,
+                         lora_path: str | None = None) -> None:
+        responses = self.collective_rpc("set_lora_adapter",
+                                        kwargs={
+                                            "lora_nickname": lora_nickname,
+                                            "lora_path": lora_path
+                                        })
+        for i, response in enumerate(responses):
+            if response["status"] != "lora_adapter_set":
+                raise RuntimeError(
+                    f"Worker {i} failed to set LoRA adapter to {lora_path}")
+
+    def unmerge_lora_weights(self) -> None:
+        responses = self.collective_rpc("unmerge_lora_weights", kwargs={})
+        for i, response in enumerate(responses):
+            if response["status"] != "lora_adapter_unmerged":
+                raise RuntimeError(f"Worker {i} failed to unmerge LoRA weights")
+
+    def merge_lora_weights(self) -> None:
+        responses = self.collective_rpc("merge_lora_weights", kwargs={})
+        for i, response in enumerate(responses):
+            if response["status"] != "lora_adapter_merged":
+                raise RuntimeError(f"Worker {i} failed to merge LoRA weights")
 
     def _run_workers(
         self,
