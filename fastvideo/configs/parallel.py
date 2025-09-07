@@ -125,3 +125,6 @@ class ParallelConfig:
     """List of open port auto-queried for data parallel messaging.
     Set to be private as it's not intended to be configured by users.
     """
+
+    def __post_init__(self) -> None:
+        self.world_size = self.pipeline_parallel_size * self.tensor_parallel_size
