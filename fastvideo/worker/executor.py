@@ -129,19 +129,19 @@ class DistributedExecutorBase(Executor):
         ...
 
 
-    @abstractmethod
-    def _driver_execute_foward(
-        self, 
-        forward_batch: ForwardBatch,
-        fastvideo_args: FastVideoArgs,
-    ) -> list[ForwardBatch]:
-        """Run execute_forward in the driver worker.
-
-        Passing None will cause the driver to stop the model execution loop
-        running in each of the remote workers. In this case, this method
-        returns None. Otherwise, this method returns the forward_batch.
-        """
-        raise NotImplementedError
+    # @abstractmethod
+    # def _driver_execute_foward(
+    #     self, 
+    #     forward_batch: ForwardBatch,
+    #     fastvideo_args: FastVideoArgs,
+    # ) -> list[ForwardBatch]:
+    #     """Run execute_forward in the driver worker.
+    #
+    #     Passing None will cause the driver to stop the model execution loop
+    #     running in each of the remote workers. In this case, this method
+    #     returns None. Otherwise, this method returns the forward_batch.
+    #     """
+    #     raise NotImplementedError
 
     def collective_rpc(self,
                        method: str | Callable,
@@ -162,9 +162,9 @@ class DistributedExecutorBase(Executor):
         """Runs the given method on all workers."""
         raise NotImplementedError
 
-    @abstractmethod
-    def _wait_for_tasks_completion(self, parallel_worker_tasks: Any) -> None:
-        """Wait for futures returned from _run_workers() with
-        async_run_remote_workers_only to complete."""
-        raise NotImplementedError
+    # @abstractmethod
+    # def _wait_for_tasks_completion(self, parallel_worker_tasks: Any) -> None:
+    #     """Wait for futures returned from _run_workers() with
+    #     async_run_remote_workers_only to complete."""
+    #     raise NotImplementedError
 
