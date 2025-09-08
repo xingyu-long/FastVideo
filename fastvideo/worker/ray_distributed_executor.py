@@ -158,6 +158,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
         for each, ip in zip(worker_metadata, worker_ips, strict=False):
             each.ip = ip
 
+        logger.info("xxx-bfore-workers: %s", worker_metadata)
         # TODO(xingyu): assume we didn't use spmd
         for i, each in enumerate(worker_metadata):
             # find and remove the dummy worker from the list
@@ -173,8 +174,8 @@ class RayDistributedExecutor(DistributedExecutorBase):
                 worker_metadata.pop(i)
                 break
 
-        logger.debug("workers: %s", worker_metadata)
-        logger.debug("driver_dummy_worker: %s", self.driver_dummy_worker)
+        logger.info("workers: %s", worker_metadata)
+        logger.info("driver_dummy_worker: %s", self.driver_dummy_worker)
         if self.driver_dummy_worker is None:
             raise ValueError(
                 "Ray does not allocate any GPUs on the driver node."
