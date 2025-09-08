@@ -158,21 +158,20 @@ class RayDistributedExecutor(DistributedExecutorBase):
         for each, ip in zip(worker_metadata, worker_ips, strict=False):
             each.ip = ip
 
-        logger.info("xxx-bfore-workers: %s", worker_metadata)
-        # TODO(xingyu): assume we didn't use spmd
-        for i, each in enumerate(worker_metadata):
-            # find and remove the dummy worker from the list
-            worker = each.worker
-            worker_ip = each.ip
-            if self.driver_dummy_worker is None and worker_ip == driver_ip:
-                # If the worker is on the same node as the driver, we use it
-                # as the resource holder for the driver process.
-                self.driver_dummy_worker = worker
-                self.driver_worker = RayWorkerWrapper(
-                    fastvideo_args=self.fastvideo_args, rpc_rank=0
-                )
-                worker_metadata.pop(i)
-                break
+        # TODO(xingyu): assume we use all workers 
+        # for i, each in enumerate(worker_metadata):
+        #     # find and remove the dummy worker from the list
+        #     worker = each.worker
+        #     worker_ip = each.ip
+        #     if self.driver_dummy_worker is None and worker_ip == driver_ip:
+        #         # If the worker is on the same node as the driver, we use it
+        #         # as the resource holder for the driver process.
+        #         self.driver_dummy_worker = worker
+        #         self.driver_worker = RayWorkerWrapper(
+        #             fastvideo_args=self.fastvideo_args, rpc_rank=0
+        #         )
+        #         worker_metadata.pop(i)
+        #         break
 
         logger.info("workers: %s", worker_metadata)
         logger.info("driver_dummy_worker: %s", self.driver_dummy_worker)
@@ -208,7 +207,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
             worker_metadata, key=sort_by_driver_then_worker_ip
         )
         # start_rank = 0 if self.use_ray_spmd_worker else 1
-        start_rank = 1
+        start_rank = 0
         for i, item in enumerate(sorted_worker_metadata):
             item.adjusted_rank = i + start_rank
         self.workers = [item.worker for item in sorted_worker_metadata]
