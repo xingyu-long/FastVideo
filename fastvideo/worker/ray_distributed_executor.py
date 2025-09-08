@@ -64,9 +64,9 @@ class RayDistributedExecutor(DistributedExecutorBase):
     ADDITIONAL_ENV_VARS = {"HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"}
 
     def _init_executor(self) -> None:
+        self.parallel_config.world_size = self.fastvideo_args.num_gpus
         initialize_ray_cluster(self.fastvideo_args, self.parallel_config)
         placement_group = self.parallel_config.placement_group
-        self.parallel_config.world_size = self.fastvideo_args.num_gpus
 
         # Disable Ray usage stats collection.
         ray_usage = os.environ.get("RAY_USAGE_STATS_ENABLED", "0")
@@ -113,6 +113,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
             if bundle.get(current_platform.ray_device_key, 0):
                 bundle_indices.append(bundle_id)
         bundle_indices = bundle_indices[: self.fastvideo_args.num_gpus]
+        logger.info(f"xxx=bundle_indices={bundle_indices}")
 
         worker_metadata: list[RayWorkerMetaData] = []
         driver_ip = get_ip()
