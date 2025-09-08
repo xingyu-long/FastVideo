@@ -564,11 +564,11 @@ class Worker(LocalOrDistributedWorkerBase):
         self.device = get_local_torch_device()
 
         # _check_if_gpu_supports_dtype(self.model_config.dtype)
-        if current_platform.is_cuda_alike():
-            self.init_gpu_memory = torch.cuda.mem_get_info()[0]
-        else:
-            # For MPS, we can't get memory info the same way
-            self.init_gpu_memory = 0
+        # if current_platform.is_cuda_alike():
+        #     self.init_gpu_memory = torch.cuda.mem_get_info()[0]
+        # else:
+        #     # For MPS, we can't get memory info the same way
+        #     self.init_gpu_memory = 0
 
         # os.environ["MASTER_ADDR"] = "localhost"
         # os.environ["MASTER_PORT"] = str(self.master_port)
