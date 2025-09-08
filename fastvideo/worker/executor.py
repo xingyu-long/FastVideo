@@ -150,6 +150,8 @@ class DistributedExecutorBase(Executor):
                        args: tuple = (),
                        kwargs: dict | None = None) -> list[Any]:
         return self._run_workers(method, *args, **(kwargs or {}))
+        # if method == "set_lora_adapter":
+        #   return {"status": "lora_adapter_set"}
 
     @abstractmethod
     def _run_workers(

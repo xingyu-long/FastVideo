@@ -214,6 +214,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
             item.created_rank: item.adjusted_rank
             for item in sorted_worker_metadata
         }
+        logger.info(f"xxx-reranking-mapping={rerank_mapping}")
         self._run_workers("adjust_rank", rerank_mapping)
 
         # Get the set of GPU IDs used on each node.
@@ -362,6 +363,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
         )
         return result_batch
 
+    # TODO(xingyu): check how to pass status
     def set_lora_adapter(self,
                          lora_nickname: str,
                          lora_path: str | None = None) -> None:
