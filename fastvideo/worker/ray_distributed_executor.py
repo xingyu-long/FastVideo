@@ -319,6 +319,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
                 or (rank % self.fastvideo_args.tensor_parallel_size == 0),
             )
             all_kwargs.append(kwargs)
+        print(f"xxx-all_kwargs={all_kwargs}")
         self._run_workers("init_worker", all_kwargs)
 
         self._run_workers("init_device")
