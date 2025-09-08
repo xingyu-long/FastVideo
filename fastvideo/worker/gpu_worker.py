@@ -560,7 +560,7 @@ class Worker(LocalOrDistributedWorkerBase):
         # This env var set by Ray causes exceptions with graph building.
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
 
-        current_cuda = torch.device("cuda", torch.cuda.current_device()
+        current_cuda = torch.device("cuda", torch.cuda.current_device())
         logger.info(f"xxx-current-cuda={current_cuda}")
         # Platform-agnostic device initialization
         self.device = get_local_torch_device()
@@ -574,7 +574,9 @@ class Worker(LocalOrDistributedWorkerBase):
 
         # os.environ["MASTER_ADDR"] = "localhost"
         # os.environ["MASTER_PORT"] = str(self.master_port)
-        os.environ["LOCAL_RANK"] = str(self.local_rank)
+
+        # in ray cluster, we shouldn't pass local_rank to decide device name
+        # os.environ["LOCAL_RANK"] = str(self.local_rank)
         os.environ["RANK"] = str(self.rank)
         os.environ["WORLD_SIZE"] = str(self.fastvideo_args.num_gpus)
 
