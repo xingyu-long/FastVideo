@@ -561,8 +561,9 @@ class Worker(LocalOrDistributedWorkerBase):
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
 
         # Platform-agnostic device initialization
-        self.device = get_local_torch_device()
+        # self.device = get_local_torch_device()
 
+        self.device = torch.device("cuda:0")
         # _check_if_gpu_supports_dtype(self.model_config.dtype)
         # if current_platform.is_cuda_alike():
         #     self.init_gpu_memory = torch.cuda.mem_get_info()[0]
@@ -574,7 +575,7 @@ class Worker(LocalOrDistributedWorkerBase):
         # os.environ["MASTER_PORT"] = str(self.master_port)
 
         # in ray cluster, we shouldn't pass local_rank to decide device name
-        # os.environ["LOCAL_RANK"] = str(self.local_rank)
+        os.environ["LOCAL_RANK"] = str(0)
         os.environ["RANK"] = str(self.rank)
         os.environ["WORLD_SIZE"] = str(self.fastvideo_args.num_gpus)
 

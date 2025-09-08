@@ -24,7 +24,8 @@ class CudaCommunicator(DeviceCommunicatorBase):
         if self.world_size > 1:
             self.pynccl_comm = PyNcclCommunicator(
                 group=self.cpu_group,
-                device=self.device,
+                # device=self.device,
+                device=torch.device("cuda:0"),
             )
 
     def all_reduce(self, input_, op: torch.distributed.ReduceOp | None = None):

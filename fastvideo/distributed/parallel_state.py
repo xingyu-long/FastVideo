@@ -187,7 +187,9 @@ class GroupCoordinator:
         from fastvideo.platforms import current_platform
 
         # TODO: fix it for other platforms
-        self.device = get_local_torch_device()
+        # hardcoded as 0 for now 
+        # self.device = get_local_torch_device()
+        self.device = torch.device("cuda:0")
 
         self.use_device_communicator = use_device_communicator
 
