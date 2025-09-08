@@ -415,10 +415,11 @@ class RayDistributedExecutor(DistributedExecutorBase):
             for worker in ray_workers
         ]
 
+        driver_worker_output = []
         # Start the driver worker after all the ray workers.
-        driver_worker_output = [
-            self.driver_worker.execute_method(sent_method, *args, **kwargs)
-        ]
+        # driver_worker_output = [
+        #     self.driver_worker.execute_method(sent_method, *args, **kwargs)
+        # ]
 
         # Get the results of the ray workers.
         if self.workers:
