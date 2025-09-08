@@ -560,8 +560,6 @@ class Worker(LocalOrDistributedWorkerBase):
         # This env var set by Ray causes exceptions with graph building.
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
 
-        current_cuda = torch.device("cuda", torch.cuda.current_device())
-        logger.info(f"xxx-current-cuda={current_cuda}")
         # Platform-agnostic device initialization
         self.device = get_local_torch_device()
 
