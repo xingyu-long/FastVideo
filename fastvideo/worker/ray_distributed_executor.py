@@ -175,13 +175,13 @@ class RayDistributedExecutor(DistributedExecutorBase):
 
         logger.info("workers: %s", worker_metadata)
         logger.info("driver_dummy_worker: %s", self.driver_dummy_worker)
-        if self.driver_dummy_worker is None:
-            raise ValueError(
-                "Ray does not allocate any GPUs on the driver node."
-                f"Driver IP: {driver_ip}, worker IPs: {worker_ips}."
-                "Consider adjusting the Ray placement group or running "
-                "the driver on a GPU node."
-            )
+        # if self.driver_dummy_worker is None:
+        #     raise ValueError(
+        #         "Ray does not allocate any GPUs on the driver node."
+        #         f"Driver IP: {driver_ip}, worker IPs: {worker_ips}."
+        #         "Consider adjusting the Ray placement group or running "
+        #         "the driver on a GPU node."
+        #     )
 
         ip_counts: dict[str, int] = {}
         for ip in worker_ips:
