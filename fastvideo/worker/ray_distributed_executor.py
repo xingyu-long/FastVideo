@@ -243,6 +243,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
         for node_id, gpu_ids in node_gpus.items():
             node_gpus[node_id] = sorted(gpu_ids)
 
+        logger.info(f"xxx-node_workers={node_workers}, node_gpus={node_gpus}")
         all_ips = set(worker_ips + [driver_ip])
         n_ips = len(all_ips)
         n_nodes = len(node_workers)
