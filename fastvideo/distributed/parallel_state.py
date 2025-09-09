@@ -187,7 +187,8 @@ class GroupCoordinator:
         from fastvideo.platforms import current_platform
 
         # TODO: fix it for other platforms
-        self.device = get_local_torch_device()
+        self.device = torch.device(f"cuda:{local_rank}")
+        # self.device = get_local_torch_device()
 
         self.use_device_communicator = use_device_communicator
 
@@ -782,7 +783,7 @@ def init_distributed_environment(
         logger.info("Using gloo backend for %s platform",
                     current_platform.device_name)
 
-    logger.debug(
+    logger.info(
         "world_size=%d rank=%d local_rank=%d "
         "distributed_init_method=%s backend=%s", world_size, rank, local_rank,
         distributed_init_method, backend)
@@ -954,7 +955,7 @@ def get_local_torch_device() -> torch.device:
 
 
 def maybe_init_distributed_environment_and_model_parallel(
-        tp_size: int, sp_size: int, distributed_init_method: str = "env://"):
+        tp_size: int, sp_size: int, distributed_init_method: str = "env://", local_rank: int=-1):
     if _WORLD is not None and model_parallel_is_initialized():
         # make sure the tp and sp sizes are correct
         assert get_tp_world_size(
@@ -962,10 +963,11 @@ def maybe_init_distributed_environment_and_model_parallel(
         assert get_sp_world_size(
         ) == sp_size, f"You are trying to initialize model parallel groups with size {sp_size}, but they are already initialized with size {get_sp_world_size()}"
         return
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    world_size = int(os.environ.get("WORLD_SIZE", 1))
-    rank = int(os.environ.get("RANK", 0))
-    device = get_local_torch_device()
+    # local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    world_size = 2
+    # world_size = int(os.environ.get("WORLD_SIZE", 1))
+    rank = local_rank
+    device = torch.device(f"cuda:{local_rank}")
     logger.info(
         "Initializing distributed environment with world_size=%d, device=%s",
         world_size, device)

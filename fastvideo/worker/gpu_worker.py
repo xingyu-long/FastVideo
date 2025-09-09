@@ -556,13 +556,13 @@ class Worker(LocalOrDistributedWorkerBase):
         # this behavior.
         # Related issue:
         # https://discuss.pytorch.org/t/cuda-allocation-lifetime-for-inputs-to-distributed-all-reduce/191573
+        logger.info(f"xxx-all-os.environ={os.environ}")
         os.environ["TORCH_NCCL_AVOID_RECORD_STREAMS"] = "1"
         # This env var set by Ray causes exceptions with graph building.
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
 
         # Platform-agnostic device initialization
-        self.device = get_local_torch_device()
-
+        self.device = torch.device(f"cuda:{self.local_rank}")
         # _check_if_gpu_supports_dtype(self.model_config.dtype)
         # if current_platform.is_cuda_alike():
         #     self.init_gpu_memory = torch.cuda.mem_get_info()[0]
@@ -574,13 +574,13 @@ class Worker(LocalOrDistributedWorkerBase):
         # os.environ["MASTER_PORT"] = str(self.master_port)
 
         # in ray cluster, we shouldn't pass local_rank to decide device name
-        # os.environ["LOCAL_RANK"] = str(self.local_rank)
+        os.environ["LOCAL_RANK"] = str(self.local_rank)
         os.environ["RANK"] = str(self.rank)
         os.environ["WORLD_SIZE"] = str(self.fastvideo_args.num_gpus)
 
         # Initialize the distributed environment.
         maybe_init_distributed_environment_and_model_parallel(
-            self.fastvideo_args.tp_size, self.fastvideo_args.sp_size, self.distributed_init_method)
+            self.fastvideo_args.tp_size, self.fastvideo_args.sp_size, self.distributed_init_method, self.local_rank)
 
         self.pipeline = build_pipeline(self.fastvideo_args)
 
