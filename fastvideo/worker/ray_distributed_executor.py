@@ -267,6 +267,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
             }
             for (node_id, _) in worker_node_and_gpu_ids
         ]
+        logger.info(f"xxx-before-all_args_env: {all_args_to_update_environment_variables}")
 
         # Environment variables to copy from driver to workers
         env_vars_to_copy = get_env_vars_to_copy(
@@ -287,6 +288,7 @@ class RayDistributedExecutor(DistributedExecutorBase):
         self._env_vars_for_all_workers = (
             all_args_to_update_environment_variables
         )
+        logger.info(f"xxx-all_args_env: {self._env_vars_for_all_workers}")
 
         self._run_workers(
             "update_environment_variables", self._get_env_vars_to_be_updated()
