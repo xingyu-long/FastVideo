@@ -968,7 +968,7 @@ def maybe_init_distributed_environment_and_model_parallel(
     device = get_local_torch_device()
     logger.info(
         "Initializing distributed environment with world_size=%d, device=%s",
-        world_size, device)
+        world_size, device, local_main_process_only=False)
 
     init_distributed_environment(
         world_size=world_size,
