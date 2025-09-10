@@ -782,6 +782,8 @@ def init_distributed_environment(
         logger.info("Using gloo backend for %s platform",
                     current_platform.device_name)
 
+    logger.info(f"xxx-here-os.environ={os.environ["CUDA_VISIBLE_DEVICES"]}")
+    logger.info(f"xxx-here-device={device_id}")
     logger.info(
         "world_size=%d rank=%d local_rank=%d "
         "distributed_init_method=%s backend=%s", world_size, rank, local_rank,
