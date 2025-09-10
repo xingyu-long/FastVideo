@@ -946,14 +946,14 @@ class WorkerWrapperBase:
     def update_environment_variables(self, envs_list: list[dict[str,
                                                                 str]]) -> None:
         envs = envs_list[self.rpc_rank]
-        logger.info(f"xxx-before-envs={envs}")
         key = 'CUDA_VISIBLE_DEVICES'
+        logger.info(f"xxx-before-envs={envs}, os.environ={os.environ[key]}")
         if key in envs and key in os.environ:
             # overwriting CUDA_VISIBLE_DEVICES is desired behavior
             # suppress the warning in `update_environment_variables`
             del os.environ[key]
         update_environment_variables(envs)
-        logger.info(f"xxx-after-envs={envs}")
+        logger.info(f"xxx-after-envs={envs}, os.environ={os.environ[key]}")
 
     def init_worker(self, all_kwargs: list[dict[str, Any]]) -> None:
         # TODO(xingyu): move this to RayWorkerWrapper
