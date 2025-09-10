@@ -574,7 +574,7 @@ class Worker(LocalOrDistributedWorkerBase):
         # os.environ["MASTER_PORT"] = str(self.master_port)
 
         # in ray cluster, we shouldn't pass local_rank to decide device name
-        # os.environ["LOCAL_RANK"] = str(self.local_rank)
+        os.environ["LOCAL_RANK"] = str(self.local_rank)
         os.environ["RANK"] = str(self.rank)
         os.environ["WORLD_SIZE"] = str(self.fastvideo_args.num_gpus)
 
