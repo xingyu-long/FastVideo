@@ -562,6 +562,7 @@ class Worker(LocalOrDistributedWorkerBase):
 
         # Platform-agnostic device initialization
         self.device = get_local_torch_device()
+        logger.info(f"xxx-os.environ={os.environ["CUDA_VISIBLE_DEVICES"]}")
 
         # _check_if_gpu_supports_dtype(self.model_config.dtype)
         # if current_platform.is_cuda_alike():
