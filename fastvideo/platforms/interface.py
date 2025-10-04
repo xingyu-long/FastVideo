@@ -26,6 +26,7 @@ class PlatformEnum(enum.Enum):
     CUDA = enum.auto()
     ROCM = enum.auto()
     TPU = enum.auto()
+    XPU = enum.auto()
     CPU = enum.auto()
     MPS = enum.auto()
     OOT = enum.auto()
@@ -65,6 +66,16 @@ class Platform:
     # use "CPU" as a fallback for platforms not registered in PyTorch
     dispatch_key: str = "CPU"
 
+    # platform-agnostic way to specify the device control environment variable,
+    # .e.g. CUDA_VISIBLE_DEVICES for CUDA.
+    # hint: search for "get_visible_accelerator_ids_env_var" in
+    # https://github.com/ray-project/ray/tree/master/python/ray/_private/accelerators # noqa
+    device_control_env_var: str = "FASTVIDEO_DEVICE_CONTROL_ENV_VAR_PLACEHOLDER"
+
+    # available ray device keys:
+    # https://github.com/ray-project/ray/blob/10ba5adadcc49c60af2c358a33bb943fb491a171/python/ray/_private/ray_constants.py#L438 # noqa
+    # empty string means the device does not support ray
+    ray_device_key: str = ""
     # The torch.compile backend for compiling simple and
     # standalone functions. The default value is "inductor" to keep
     # the same behavior as PyTorch.
@@ -74,6 +85,8 @@ class Platform:
 
     supported_quantization: list[str] = []
 
+    additional_env_vars: list[str] = []
+
     def is_cuda(self) -> bool:
         return self._enum == PlatformEnum.CUDA
 
@@ -82,6 +95,9 @@ class Platform:
 
     def is_tpu(self) -> bool:
         return self._enum == PlatformEnum.TPU
+
+    def is_xpu(self) -> bool:
+        return self._enum == PlatformEnum.XPU
 
     def is_cpu(self) -> bool:
         return self._enum == PlatformEnum.CPU
