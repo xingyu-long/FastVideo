@@ -953,11 +953,18 @@ def get_dp_rank() -> int:
     return get_dp_group().rank_in_group
 
 
-def get_local_torch_device() -> torch.device:
+def get_local_torch_device(local_rank: int = -1) -> torch.device:
     """Return the torch device for the current rank."""
-    return torch.device(f"cuda:{envs.LOCAL_RANK}"
-                        ) if current_platform.is_cuda_alike() else torch.device(
-                            "mps")
+    from fastvideo.platforms import current_platform
+
+    if local_rank == -1:
+        local_rank = envs.LOCAL_RANK
+
+    if current_platform.is_cuda_alike() or current_platform.is_cuda():
+        device = torch.device(f"cuda:{local_rank}")
+    else:
+        device = torch.device("mps")
+    return device
 
 
 def maybe_init_distributed_environment_and_model_parallel(

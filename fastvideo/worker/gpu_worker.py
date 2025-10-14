@@ -561,7 +561,7 @@ class Worker(LocalOrDistributedWorkerBase):
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
 
         # Platform-agnostic device initialization
-        self.device = get_local_torch_device()
+        self.device = get_local_torch_device(self.local_rank)
         logger.info(f"xxx-os.environ={os.environ["CUDA_VISIBLE_DEVICES"]}")
 
         # _check_if_gpu_supports_dtype(self.model_config.dtype)
